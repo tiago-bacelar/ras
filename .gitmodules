@@ -1,0 +1,12 @@
+[submodule "ras-notifications"]
+	path = ras-notifications
+	url = git@github.com:lumafepe/ras-notifications.git
+[submodule "ras-frontend"]
+	path = ras-frontend
+	url = git@github.com:tiago-bacelar/ras-frontend.git
+[submodule "RAS_USER"]
+	path = RAS_USER
+	url = git@github.com:PauloPHPC/RAS_USER.git
+[submodule "Ras-room-ms"]
+	path = Ras-room-ms
+	url = https://github.com/Alexmartins01/Ras-room-ms
