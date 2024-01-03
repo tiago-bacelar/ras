@@ -1,0 +1,90 @@
+version: '3'
+
+services:
+  notifications:
+    build: ./ras-notifications/notifications
+    environment:
+      - TZ=Europe/Lisbon
+    networks:
+      - services
+    depends_on:
+      - notifications-postgres
+      - notifications-redis
+
+  notifications-postgres:
+    image: postgres
+    volumes:
+      - notifications-postgres-data:/var/lib/postgresql/data
+    networks:
+      - services
+    environment:
+      - POSTGRES_DB=notifications
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - TZ=Europe/Lisbon
+
+  notifications-redis:  # Define Redis service
+    image: redis
+    networks:
+      - services
+    depends_on:
+      - notifications-postgres
+    environment:
+      - TZ=Europe/Lisbon
+
+
+  users-mysql:
+    image: mysql:latest
+    volumes:
+      - users-mysql-data:/var/lib/mysql
+    networks:
+      - services
+    environment:
+      - MYSQL_DATABASE=user
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+      - MYSQL_ROOT_PASSWORD=admin
+      - TZ=Europe/Lisbon
+    
+  users:
+    build: ./RAS_USER/users_backend
+    environment:
+      - TZ=Europe/Lisbon
+    networks:
+      - services
+    depends_on:
+      wait-for-db-users:
+        condition: service_completed_successfully
+
+  
+  wait-for-db-users:
+    image: atkrad/wait4x
+    networks:
+      - services
+    depends_on:
+      - users-mysql
+    command: tcp users-mysql:3306 -t 30s -i 250ms
+
+  nginx:
+    image: kensingtontech/nginx-jwt:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./public.pem:/etc/nginx/public.pem
+    ports:
+      - "8000:80"
+    networks:
+      - services
+    depends_on:
+      - notifications
+      - users
+
+
+    
+
+volumes:
+  notifications-postgres-data:
+  users-mysql-data:
+
+networks:
+  services:
+    driver: bridge
