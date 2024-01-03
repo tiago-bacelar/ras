@@ -90,11 +90,9 @@ services:
       - rooms-mysql-data:/var/lib/mysql
 
   nginx:
-    image: kensingtontech/nginx-jwt:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    build: ./api-layer
     ports:
-      - "80:80"
+      - "80:8000"
     networks:
       - notifications
       - users
