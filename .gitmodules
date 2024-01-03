@@ -10,3 +10,6 @@
 [submodule "Ras-room-ms"]
 	path = Ras-room-ms
 	url = https://github.com/Alexmartins01/Ras-room-ms
+[submodule "ras-exams"]
+	path = ras-exams
+	url = git@github.com:goncalosantos3/ras-exams.git
