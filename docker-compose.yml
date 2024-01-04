@@ -92,7 +92,8 @@ services:
   nginx:
     build: ./api-layer
     ports:
-      - "80:8000"
+      - "8000:8000"
+      - "8001:80"
     networks:
       - notifications
       - users
@@ -101,9 +102,18 @@ services:
       - notifications
       - users
       - rooms
+      - frontend
+  frontend:
+    build:
+      context: ./ras-frontend
+      dockerfile: Dockerfile
+    ports:
+      - '80:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
 
 
-    
 
 volumes:
   notifications-postgres-data:
