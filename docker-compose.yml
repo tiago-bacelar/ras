@@ -63,7 +63,7 @@ services:
       - users
     depends_on:
       - users-mysql
-    command: tcp users-mysql:3306 -t 30s -i 250ms
+    command: tcp users-mysql:3306 -t 120s -i 1s
 
   rooms:
     build: ./Ras-room-ms/
@@ -89,6 +89,44 @@ services:
     volumes:
       - rooms-mysql-data:/var/lib/mysql
 
+  exams-mysql:
+    container_name: exams-mysql
+    image: mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_USER=ras
+      - MYSQL_PASSWORD=rasexams
+      - MYSQL_DATABASE=ras_exams
+      - MYSQL_HOST=mysql
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - TZ=Europe/Lisbon
+    networks:
+      - exams
+    volumes:
+      - exams-mysql-data:/var/lib/mysql
+
+  exam-wait-for-db:
+    image: atkrad/wait4x
+    networks:      
+      - exams
+    depends_on:
+      - exams-mysql
+    command: tcp exams-mysql:3306 -t 120s -i 1s
+  
+  exams:
+    container_name: exams
+    depends_on:
+      exam-wait-for-db:
+        condition: service_completed_successfully
+    build: ./ras-exams/exams
+    restart: on-failure
+    networks:
+      - exams
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://exams-mysql:3306/ras_exams
+      - DEFAULT_DB_URL=jdbc:mysql://exams-mysql:3306/
+      - TZ=Europe/Lisbon
+
   nginx:
     build: ./api-layer
     ports:
@@ -98,27 +136,26 @@ services:
       - notifications
       - users
       - rooms
+      - exams
     depends_on:
       - notifications
       - users
       - rooms
       - frontend
+      - exams
+
+
   frontend:
-    build:
-      context: ./ras-frontend
-      dockerfile: Dockerfile
+    build: ./ras-frontend
     ports:
       - '80:3000'
-    volumes:
-      - .:/app
-      - /app/node_modules
-
 
 
 volumes:
   notifications-postgres-data:
   users-mysql-data:
   rooms-mysql-data:
+  exams-mysql-data:
 
 networks:
   notifications:
@@ -126,4 +163,6 @@ networks:
   users:
     driver: bridge
   rooms:
+    driver: bridge
+  exams:
     driver: bridge
